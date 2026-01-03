@@ -1,0 +1,37 @@
+# Franka User Control - Safety Limits Configuration
+# These are conservative defaults for safe operation
+
+# Collision behavior thresholds
+# Format: [joint1, joint2, joint3, joint4, joint5, joint6, joint7]
+collision_behavior:
+  # Lower torque thresholds for acceleration (Nm)
+  lower_torque_thresholds_acceleration: [20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0]
+  
+  # Upper torque thresholds for acceleration (Nm)
+  upper_torque_thresholds_acceleration: [20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0]
+  
+  # Lower torque thresholds for nominal operation (Nm)
+  lower_torque_thresholds_nominal: [20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0]
+  
+  # Upper torque thresholds for nominal operation (Nm)
+  upper_torque_thresholds_nominal: [20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0]
+  
+  # Lower force thresholds for acceleration (N, Nm)
+  # Format: [Fx, Fy, Fz, Tx, Ty, Tz]
+  lower_force_thresholds_acceleration: [20.0, 20.0, 20.0, 25.0, 25.0, 25.0]
+  
+  # Upper force thresholds for acceleration (N, Nm)
+  upper_force_thresholds_acceleration: [20.0, 20.0, 20.0, 25.0, 25.0, 25.0]
+  
+  # Lower force thresholds for nominal operation (N, Nm)
+  lower_force_thresholds_nominal: [20.0, 20.0, 20.0, 25.0, 25.0, 25.0]
+  
+  # Upper force thresholds for nominal operation (N, Nm)
+  upper_force_thresholds_nominal: [20.0, 20.0, 20.0, 25.0, 25.0, 25.0]
+
+# Testing mode with more conservative limits
+testing_mode:
+  enabled: false
+  max_translation_velocity: 0.05  # 5 cm/s
+  max_rotation_velocity: 0.5      # 0.5 rad/s
+  workspace_scale: 0.8            # Scale workspace to 80% of normal

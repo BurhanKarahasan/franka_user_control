@@ -1,0 +1,18 @@
+# Service to move relative to current pose
+
+# Request
+float64 dx                          # Delta X in meters
+float64 dy                          # Delta Y in meters
+float64 dz                          # Delta Z in meters
+float64 droll                       # Delta roll in radians
+float64 dpitch                      # Delta pitch in radians
+float64 dyaw                        # Delta yaw in radians
+float64 max_velocity                # Maximum velocity (m/s), default 0.1
+float64 max_acceleration            # Maximum acceleration (m/s²), default 1.0
+string impedance_mode               # 'stiff', 'medium', 'soft', or 'custom'
+bool wait_for_completion            # If true, service returns after motion completes
+---
+# Response
+bool success                        # True if command was accepted
+string message                      # Status or error message
+float64 estimated_duration          # Estimated time to complete motion (seconds)

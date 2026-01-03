@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>franka_user_control</name>
+  <version>0.1.0</version>
+  <description>
+    User-friendly control interface for Franka Research 3 robot.
+    Provides velocity control, position control, and combined control modes
+    with a simple Python API and terminal-based UI.
+  </description>
+  
+  <maintainer email="user@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+  
+  <author email="user@example.com">Your Name</author>
+  
+  <!-- Build tool dependencies -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  
+  <!-- C++ dependencies -->
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>rosidl_default_generators</depend>
+  
+  <!-- Python dependencies -->
+  <depend>rclpy</depend>
+  
+  <!-- External libraries -->
+  <!-- Note: libfranka must be installed separately on your system -->
+  <depend>eigen</depend>
+  
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

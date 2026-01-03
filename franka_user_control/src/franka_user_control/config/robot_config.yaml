@@ -1,0 +1,29 @@
+# Franka User Control - Robot Configuration
+# Update robot_ip with your actual robot's IP address
+
+robot_ip: "192.168.1.100"  # Change this to your robot's IP
+
+# Velocity and acceleration limits
+max_translation_velocity: 0.2      # m/s (maximum linear velocity)
+max_rotation_velocity: 1.0         # rad/s (maximum angular velocity)
+max_translation_acceleration: 1.0  # m/s² (maximum linear acceleration)
+max_rotation_acceleration: 5.0     # rad/s² (maximum angular acceleration)
+
+# Workspace boundaries (meters, relative to robot base)
+workspace:
+  x_min: 0.1    # Minimum X coordinate
+  x_max: 0.85   # Maximum X coordinate
+  y_min: -0.5   # Minimum Y coordinate
+  y_max: 0.5    # Maximum Y coordinate
+  z_min: 0.0    # Minimum Z coordinate (table height)
+  z_max: 0.8    # Maximum Z coordinate
+
+# External force/torque thresholds for safety monitoring
+# [Fx, Fy, Fz, Tx, Ty, Tz] in Newtons and Newton-meters
+force_thresholds: [30.0, 30.0, 30.0, 25.0, 25.0, 25.0]
+
+# Control loop update rate (Hz)
+control_rate: 1000
+
+# Status publishing rate (Hz)
+status_publish_rate: 10

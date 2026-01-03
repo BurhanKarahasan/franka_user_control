@@ -1,0 +1,9 @@
+# Service to switch between control modes
+
+# Request
+string mode       # Control mode: 'velocity', 'position', 'idle'
+---
+# Response
+bool success      # True if mode switch was successful
+string message    # Status or error message
+string current_mode  # Current control mode after switch

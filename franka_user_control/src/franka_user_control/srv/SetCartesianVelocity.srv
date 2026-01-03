@@ -1,0 +1,15 @@
+# Service to command Cartesian velocity
+# Linear velocities in m/s, angular velocities in rad/s
+
+# Request
+float64 vx        # Linear velocity in X direction (m/s)
+float64 vy        # Linear velocity in Y direction (m/s)
+float64 vz        # Linear velocity in Z direction (m/s)
+float64 wx        # Angular velocity around X axis (rad/s)
+float64 wy        # Angular velocity around Y axis (rad/s)
+float64 wz        # Angular velocity around Z axis (rad/s)
+float64 duration  # Duration to maintain this velocity (seconds), 0.0 = continuous
+---
+# Response
+bool success      # True if command was accepted
+string message    # Status or error message

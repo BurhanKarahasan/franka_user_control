@@ -1,0 +1,8 @@
+# Service for emergency stop
+
+# Request
+bool stop         # True to trigger emergency stop, False to reset
+---
+# Response
+bool success      # True if emergency stop was triggered/reset
+string message    # Status message

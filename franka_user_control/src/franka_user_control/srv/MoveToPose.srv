@@ -1,0 +1,14 @@
+# Service to move to an absolute Cartesian pose
+
+# Request
+geometry_msgs/Pose target_pose      # Target pose in world frame
+float64 max_velocity                # Maximum velocity (m/s), default 0.1
+float64 max_acceleration            # Maximum acceleration (m/s²), default 1.0
+string impedance_mode               # 'stiff', 'medium', 'soft', or 'custom'
+float64[6] custom_impedance         # Custom impedance if mode='custom' [Kx, Ky, Kz, Krx, Kry, Krz]
+bool wait_for_completion            # If true, service returns after motion completes
+---
+# Response
+bool success                        # True if command was accepted
+string message                      # Status or error message
+float64 estimated_duration          # Estimated time to complete motion (seconds)
