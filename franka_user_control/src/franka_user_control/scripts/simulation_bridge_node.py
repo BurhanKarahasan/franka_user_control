@@ -11,7 +11,7 @@ import math
 import numpy as np
 import rclpy # type: ignore
 from rclpy.node import Node # type: ignore
-from geometry_msgs.msg import Pose, Twist # type: ignore
+from geometry_msgs.msg import Pose, Twist, PoseStamped # type: ignore
 from sensor_msgs.msg import JointState # type: ignore
 
 
@@ -52,7 +52,7 @@ class SimulationBridgeNode(Node):
         )
         
         # Publishers
-        self.pose_pub = self.create_publisher(Pose, 'current_pose', 10)
+        self.pose_pub = self.create_publisher(PoseStamped, 'current_pose', 10)
         self.status_pub = self.create_publisher(JointState, 'robot_status', 10)
         
         # Simulation timer (100 Hz)
@@ -118,10 +118,12 @@ class SimulationBridgeNode(Node):
     
     def publish_status(self):
         """Publish current robot status."""
-        # Publish pose
-        self.current_pose.header.stamp = self.get_clock().now().to_msg()
-        self.current_pose.header.frame_id = 'fr3_link0'
-        self.pose_pub.publish(self.current_pose)
+        # Publish pose as PoseStamped (Pose has no header)
+        ps = PoseStamped()
+        ps.header.stamp = self.get_clock().now().to_msg()
+        ps.header.frame_id = 'fr3_link0'
+        ps.pose = self.current_pose
+        self.pose_pub.publish(ps)
         
         # Publish status as joint state (reusing message type)
         status_msg = JointState()

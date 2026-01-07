@@ -19,15 +19,15 @@
 #include "franka_user_control/impedance_controller.hpp"
 #include "franka_user_control/safety_monitor.hpp"
 
-// Include generated service/message types (will be available after build)
-// #include "franka_user_control/srv/set_cartesian_velocity.hpp"
-// #include "franka_user_control/srv/move_to_pose.hpp"
-// #include "franka_user_control/srv/move_relative.hpp"
-// #include "franka_user_control/srv/set_control_mode.hpp"
-// #include "franka_user_control/srv/emergency_stop.hpp"
-// #include "franka_user_control/msg/robot_status.hpp"
-// #include "franka_user_control/msg/safety_status.hpp"
-// #include "franka_user_control/msg/controller_state.hpp"
+// Include generated service/message types
+#include "franka_user_control/srv/set_cartesian_velocity.hpp"
+#include "franka_user_control/srv/move_to_pose.hpp"
+#include "franka_user_control/srv/move_relative.hpp"
+#include "franka_user_control/srv/set_control_mode.hpp"
+#include "franka_user_control/srv/emergency_stop.hpp"
+#include "franka_user_control/msg/robot_status.hpp"
+#include "franka_user_control/msg/safety_status.hpp"
+#include "franka_user_control/msg/controller_state.hpp"
 
 namespace franka_user_control {
 
@@ -84,43 +84,43 @@ private:
   /**
    * @brief Handle velocity command service
    */
-  void handleSetVelocity(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response);
+  void handleSetVelocity();
 
   /**
    * @brief Handle move to pose service
    */
-  void handleMoveToPose(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response);
+  void handleMoveToPose();
 
   /**
    * @brief Handle relative move service
    */
-  void handleMoveRelative(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response);
+  void handleMoveRelative();
 
   /**
    * @brief Handle control mode switch service
    */
-  void handleSetControlMode(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response);
+  void handleSetControlMode();
 
   /**
    * @brief Handle emergency stop service
    */
-  void handleEmergencyStop(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response);
+  void handleEmergencyStop();
 
   // Control loop functions
   /**
    * @brief Main control loop running in separate thread
    */
   void controlLoop();
+
+  /**
+   * @brief Execute velocity control loop (called from controlLoop)
+   */
+  void executeVelocityControl();
+
+  /**
+   * @brief Execute position control loop (called from controlLoop)
+   */
+  void executePositionControl();
 
   /**
    * @brief Velocity control callback for libfranka
@@ -179,17 +179,17 @@ private:
   geometry_msgs::msg::Pose getCurrentPose() const;
 
   // ROS2 communication
-  // Services
-  rclcpp::Service<rclcpp::AnyServiceType>::SharedPtr srv_set_velocity_;
-  rclcpp::Service<rclcpp::AnyServiceType>::SharedPtr srv_move_to_pose_;
-  rclcpp::Service<rclcpp::AnyServiceType>::SharedPtr srv_move_relative_;
-  rclcpp::Service<rclcpp::AnyServiceType>::SharedPtr srv_set_control_mode_;
-  rclcpp::Service<rclcpp::AnyServiceType>::SharedPtr srv_emergency_stop_;
+  // Services (typed)
+  rclcpp::Service<franka_user_control::srv::SetCartesianVelocity>::SharedPtr srv_set_velocity_;
+  rclcpp::Service<franka_user_control::srv::MoveToPose>::SharedPtr srv_move_to_pose_;
+  rclcpp::Service<franka_user_control::srv::MoveRelative>::SharedPtr srv_move_relative_;
+  rclcpp::Service<franka_user_control::srv::SetControlMode>::SharedPtr srv_set_control_mode_;
+  rclcpp::Service<franka_user_control::srv::EmergencyStop>::SharedPtr srv_emergency_stop_;
 
-  // Publishers
-  rclcpp::Publisher<rclcpp::AnyServiceType>::SharedPtr pub_robot_status_;
-  rclcpp::Publisher<rclcpp::AnyServiceType>::SharedPtr pub_safety_status_;
-  rclcpp::Publisher<rclcpp::AnyServiceType>::SharedPtr pub_controller_state_;
+  // Publishers (typed)
+  rclcpp::Publisher<franka_user_control::msg::RobotStatus>::SharedPtr pub_robot_status_;
+  rclcpp::Publisher<franka_user_control::msg::SafetyStatus>::SharedPtr pub_safety_status_;
+  rclcpp::Publisher<franka_user_control::msg::ControllerState>::SharedPtr pub_controller_state_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_joint_states_;
 
   // Timers

@@ -1,43 +1,45 @@
-# Franka User Control - Impedance Parameters Configuration
-# Defines stiffness and damping for different compliance modes
+simulation_bridge_node:
+  ros__parameters:
+    # Franka User Control - Impedance Parameters Configuration
+    # Defines stiffness and damping for different compliance modes
 
-# Impedance modes for different use cases
-impedance_modes:
-  
-  # Stiff mode - High precision positioning
-  stiff:
-    joint_stiffness: [600.0, 600.0, 600.0, 600.0, 250.0, 150.0, 50.0]  # Nm/rad (Kp)
-    joint_damping: [50.0, 50.0, 50.0, 50.0, 30.0, 25.0, 15.0]          # Nms/rad (Kd)
-    cartesian_stiffness: [3000.0, 3000.0, 3000.0, 300.0, 300.0, 300.0] # N/m, Nm/rad
-    description: "High stiffness for precise positioning tasks"
-  
-  # Medium mode - Balanced performance
-  medium:
-    joint_stiffness: [400.0, 400.0, 400.0, 400.0, 150.0, 100.0, 30.0]
-    joint_damping: [30.0, 30.0, 30.0, 30.0, 20.0, 15.0, 10.0]
-    cartesian_stiffness: [1500.0, 1500.0, 1500.0, 150.0, 150.0, 150.0]
-    description: "Balanced stiffness for general purpose tasks"
-  
-  # Soft mode - Compliant interaction
-  soft:
-    joint_stiffness: [200.0, 200.0, 200.0, 200.0, 100.0, 50.0, 20.0]
-    joint_damping: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 5.0]
-    cartesian_stiffness: [500.0, 500.0, 500.0, 50.0, 50.0, 50.0]
-    description: "Low stiffness for compliant interaction and safety"
-  
-  # Very soft mode - Extremely compliant (for contact tasks)
-  very_soft:
-    joint_stiffness: [100.0, 100.0, 100.0, 100.0, 50.0, 25.0, 10.0]
-    joint_damping: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 2.0]
-    cartesian_stiffness: [200.0, 200.0, 200.0, 20.0, 20.0, 20.0]
-    description: "Very low stiffness for delicate contact tasks"
+    # Impedance modes for different use cases
+    impedance_modes:
+      
+      # Stiff mode - High precision positioning
+      stiff:
+        joint_stiffness: [600.0, 600.0, 600.0, 600.0, 250.0, 150.0, 50.0]  # Nm/rad (Kp)
+        joint_damping: [50.0, 50.0, 50.0, 50.0, 30.0, 25.0, 15.0]          # Nms/rad (Kd)
+        cartesian_stiffness: [3000.0, 3000.0, 3000.0, 300.0, 300.0, 300.0] # N/m, Nm/rad
+        description: "High stiffness for precise positioning tasks"
+      
+      # Medium mode - Balanced performance
+      medium:
+        joint_stiffness: [400.0, 400.0, 400.0, 400.0, 150.0, 100.0, 30.0]
+        joint_damping: [30.0, 30.0, 30.0, 30.0, 20.0, 15.0, 10.0]
+        cartesian_stiffness: [1500.0, 1500.0, 1500.0, 150.0, 150.0, 150.0]
+        description: "Balanced stiffness for general purpose tasks"
+      
+      # Soft mode - Compliant interaction
+      soft:
+        joint_stiffness: [200.0, 200.0, 200.0, 200.0, 100.0, 50.0, 20.0]
+        joint_damping: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 5.0]
+        cartesian_stiffness: [500.0, 500.0, 500.0, 50.0, 50.0, 50.0]
+        description: "Low stiffness for compliant interaction and safety"
+      
+      # Very soft mode - Extremely compliant (for contact tasks)
+      very_soft:
+        joint_stiffness: [100.0, 100.0, 100.0, 100.0, 50.0, 25.0, 10.0]
+        joint_damping: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 2.0]
+        cartesian_stiffness: [200.0, 200.0, 200.0, 20.0, 20.0, 20.0]
+        description: "Very low stiffness for delicate contact tasks"
 
-# Default mode to use on startup
-default_mode: "medium"
+    # Default mode to use on startup
+    default_mode: "medium"
 
-# Velocity filter size for impedance control
-velocity_filter_size: 5
+    # Velocity filter size for impedance control
+    velocity_filter_size: 5
 
-# Enable nullspace stiffness (keeps elbow in preferred configuration)
-nullspace_stiffness_enabled: false
-nullspace_stiffness: 20.0  # Nm/rad
+    # Enable nullspace stiffness (keeps elbow in preferred configuration)
+    nullspace_stiffness_enabled: false
+    nullspace_stiffness: 20.0  # Nm/rad

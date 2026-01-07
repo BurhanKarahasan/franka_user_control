@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <franka/robot_state.h>
 #include <franka/duration.h>
+#include <memory>
 
 namespace franka_user_control {
 

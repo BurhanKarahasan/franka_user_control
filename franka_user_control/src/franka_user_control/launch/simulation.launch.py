@@ -8,12 +8,14 @@ Uses fake hardware interface for testing and development.
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction # type: ignore
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution # type: ignore
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription # type: ignore
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command # type: ignore
 from launch.conditions import IfCondition # type: ignore
 from launch_ros.actions import Node # type: ignore
 from launch_ros.substitutions import FindPackageShare # type: ignore
+from launch_ros.parameter_descriptions import ParameterValue # type: ignore
 from ament_index_python.packages import get_package_share_directory # type: ignore
+from launch.launch_description_sources import PythonLaunchDescriptionSource # type: ignore
 import launch.conditions # type: ignore
 
 
@@ -82,14 +84,23 @@ def generate_launch_description():
     )
     
     # Robot state publisher (publishes TF transforms)
+    # Generate robot_description from xacro/URDF in the package share
+    robot_description = Command([
+        'xacro ', PathJoinSubstitution([pkg_share, 'urdf', 'fr3.urdf.xacro'])
+    ])
+
+    # SRDF (semantic robot description) - provide to RViz/MoveIt displays
+    robot_description_semantic = Command([
+        'cat ', PathJoinSubstitution([pkg_share, 'urdf', 'fr3.srdf'])
+    ])
+
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
         parameters=[
-            # In a real implementation, this would load the URDF
-            # For now, we'll use a placeholder
+            {'robot_description': ParameterValue(robot_description, value_type=str)}
         ],
     )
     
@@ -115,6 +126,9 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
         arguments=['-d', rviz_config_file],
+        parameters=[
+            {'robot_description_semantic': ParameterValue(robot_description_semantic, value_type=str)}
+        ],
         condition=IfCondition(
             LaunchConfiguration('use_rviz')
         ),
@@ -150,5 +164,6 @@ def generate_launch_description():
         fake_robot_state_node,
         robot_state_publisher,
         sim_bridge_node,
+        joint_state_publisher_gui,
         rviz_node,
     ])

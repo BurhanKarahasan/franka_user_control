@@ -4,7 +4,7 @@
 #include <memory>
 #include <csignal>
 #include <rclcpp/rclcpp.hpp>
-#include "franka_user_control/franka_bridge_node.hpp"
+#include "franka_user_control/bridge_node.hpp"
 
 // Global pointer for signal handler
 std::shared_ptr<franka_user_control::FrankaBridgeNode> g_node;

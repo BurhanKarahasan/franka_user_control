@@ -84,10 +84,9 @@ ament_target_dependencies(franka_bridge_node
   sensor_msgs
 )
 
-# Link against generated messages/services
-rosidl_target_interfaces(franka_bridge_node
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
-)
+# Link against generated messages/services (use non-deprecated API)
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+target_link_libraries(franka_bridge_node "${cpp_typesupport_target}")
 
 # Install C++ executables
 install(TARGETS
@@ -139,6 +138,14 @@ install(DIRECTORY
 # Install documentation
 install(DIRECTORY
   docs
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Install robot model, meshes and rviz configs so launch files can find them
+install(DIRECTORY
+  urdf
+  meshes
+  rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

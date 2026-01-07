@@ -1,7 +1,7 @@
 // Copyright (c) 2024 Franka User Control
 // Licensed under the Apache License, Version 2.0
 
-#include "franka_user_control/franka_bridge_node.hpp"
+#include "franka_user_control/bridge_node.hpp"
 #include <chrono>
 
 namespace franka_user_control {
@@ -22,6 +22,96 @@ FrankaBridgeNode::FrankaBridgeNode(const rclcpp::NodeOptions& options)
   
   RCLCPP_INFO(get_logger(), "Creating ROS2 services...");
   
+  // Typed services
+  srv_set_velocity_ = create_service<franka_user_control::srv::SetCartesianVelocity>(
+      "set_cartesian_velocity",
+      [this](const std::shared_ptr<franka_user_control::srv::SetCartesianVelocity::Request> req,
+             std::shared_ptr<franka_user_control::srv::SetCartesianVelocity::Response> res) {
+        RCLCPP_INFO(this->get_logger(), "SetCartesianVelocity called");
+        std::array<double, 6> velocity = {req->vx, req->vy, req->vz, req->wx, req->wy, req->wz};
+        auto violation = this->safety_monitor_->checkVelocityCommand(velocity);
+        if (violation.hasViolation()) {
+          res->success = false;
+          res->message = "Velocity command violates safety limits: " + violation.description;
+          return;
+        }
+        this->velocity_controller_->setTargetVelocity(velocity);
+        this->current_mode_ = ControlMode::VELOCITY;
+        res->success = true;
+        res->message = "Velocity command accepted";
+      });
+
+  srv_move_to_pose_ = create_service<franka_user_control::srv::MoveToPose>(
+      "move_to_pose",
+      [this](const std::shared_ptr<franka_user_control::srv::MoveToPose::Request> req,
+             std::shared_ptr<franka_user_control::srv::MoveToPose::Response> res) {
+        RCLCPP_INFO(this->get_logger(), "MoveToPose called");
+        auto joint_angles = this->poseToJoints(req->target_pose);
+        double speed_factor = std::max(0.0, std::min(1.0, req->max_velocity / this->safety_limits_.max_translation_velocity));
+        this->motion_generator_ = std::make_unique<MotionGenerator>(speed_factor, joint_angles);
+        this->current_mode_ = ControlMode::POSITION;
+        res->success = true;
+        res->message = "Position motion started";
+        res->estimated_duration = this->motion_generator_->getEstimatedDuration();
+      });
+
+  srv_move_relative_ = create_service<franka_user_control::srv::MoveRelative>(
+      "move_relative",
+      [this](const std::shared_ptr<franka_user_control::srv::MoveRelative::Request> req,
+             std::shared_ptr<franka_user_control::srv::MoveRelative::Response> res) {
+        RCLCPP_INFO(this->get_logger(), "MoveRelative called");
+        auto current_pose = this->getCurrentPose();
+        geometry_msgs::msg::Pose target = current_pose;
+        target.position.x += req->dx;
+        target.position.y += req->dy;
+        target.position.z += req->dz;
+        // Note: orientation deltas ignored for now
+        auto joint_angles = this->poseToJoints(target);
+        double speed_factor = std::max(0.0, std::min(1.0, req->max_velocity / this->safety_limits_.max_translation_velocity));
+        this->motion_generator_ = std::make_unique<MotionGenerator>(speed_factor, joint_angles);
+        this->current_mode_ = ControlMode::POSITION;
+        res->success = true;
+        res->message = "Relative position motion started";
+        res->estimated_duration = this->motion_generator_->getEstimatedDuration();
+      });
+
+  srv_set_control_mode_ = create_service<franka_user_control::srv::SetControlMode>(
+      "set_control_mode",
+      [this](const std::shared_ptr<franka_user_control::srv::SetControlMode::Request> req,
+             std::shared_ptr<franka_user_control::srv::SetControlMode::Response> res) {
+        RCLCPP_INFO(this->get_logger(), "SetControlMode called: %s", req->mode.c_str());
+        if (req->mode == "velocity") {
+          this->current_mode_ = ControlMode::VELOCITY;
+        } else if (req->mode == "position") {
+          this->current_mode_ = ControlMode::POSITION;
+        } else {
+          this->current_mode_ = ControlMode::IDLE;
+        }
+        res->success = true;
+        res->current_mode = (this->current_mode_ == ControlMode::VELOCITY) ? "velocity" : (this->current_mode_ == ControlMode::POSITION) ? "position" : "idle";
+        res->message = "Mode set";
+      });
+
+  srv_emergency_stop_ = create_service<franka_user_control::srv::EmergencyStop>(
+      "emergency_stop",
+      [this](const std::shared_ptr<franka_user_control::srv::EmergencyStop::Request> req,
+             std::shared_ptr<franka_user_control::srv::EmergencyStop::Response> res) {
+        RCLCPP_WARN(this->get_logger(), "EmergencyStop called: %s", req->stop ? "STOP" : "RESET");
+        if (req->stop) {
+          this->emergency_stop_active_ = true;
+          this->current_mode_ = ControlMode::IDLE;
+          if (this->robot_) {
+            try { this->robot_->stop(); } catch (const franka::Exception& e) { RCLCPP_ERROR(this->get_logger(), "Error stopping robot: %s", e.what()); }
+          }
+          res->success = true;
+          res->message = "Emergency stop activated";
+        } else {
+          this->emergency_stop_active_ = false;
+          res->success = true;
+          res->message = "Emergency stop reset";
+        }
+      });
+
   // Publishers for status information
   pub_joint_states_ = create_publisher<sensor_msgs::msg::JointState>(
       "joint_states", 10);
@@ -375,9 +465,7 @@ void FrankaBridgeNode::executePositionControl() {
 // Service handler implementations
 // Note: These are simplified versions. After build, they would use proper service types
 
-void FrankaBridgeNode::handleSetVelocity(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response) {
+void FrankaBridgeNode::handleSetVelocity() {
   
   RCLCPP_INFO(get_logger(), "Set velocity service called");
   
@@ -404,9 +492,7 @@ void FrankaBridgeNode::handleSetVelocity(
   // res->message = "Velocity command accepted";
 }
 
-void FrankaBridgeNode::handleMoveToPose(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response) {
+void FrankaBridgeNode::handleMoveToPose() {
   
   RCLCPP_INFO(get_logger(), "Move to pose service called");
   
@@ -433,9 +519,7 @@ void FrankaBridgeNode::handleMoveToPose(
   // res->message = "Position motion started";
 }
 
-void FrankaBridgeNode::handleMoveRelative(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response) {
+void FrankaBridgeNode::handleMoveRelative() {
   
   RCLCPP_INFO(get_logger(), "Move relative service called");
   
@@ -451,9 +535,7 @@ void FrankaBridgeNode::handleMoveRelative(
   // Then use same logic as MoveToPose
 }
 
-void FrankaBridgeNode::handleSetControlMode(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response) {
+void FrankaBridgeNode::handleSetControlMode() {
   
   RCLCPP_INFO(get_logger(), "Set control mode service called");
   
@@ -471,9 +553,7 @@ void FrankaBridgeNode::handleSetControlMode(
   // res->current_mode = req->mode;
 }
 
-void FrankaBridgeNode::handleEmergencyStop(
-    const std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Request> request,
-    std::shared_ptr<rclcpp::Service<rclcpp::AnyServiceType>::Response> response) {
+void FrankaBridgeNode::handleEmergencyStop() {
   
   RCLCPP_WARN(get_logger(), "Emergency stop service called");
   

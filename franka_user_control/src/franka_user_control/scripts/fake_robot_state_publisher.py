@@ -12,6 +12,12 @@ from rclpy.node import Node # type: ignore
 from sensor_msgs.msg import JointState # type: ignore
 from geometry_msgs.msg import Pose # type: ignore
 from builtin_interfaces.msg import Time # type: ignore
+import os
+import xml.etree.ElementTree as ET
+try:
+    from ament_index_python.packages import get_package_share_directory
+except Exception:
+    get_package_share_directory = None
 
 
 class FakeRobotStatePublisher(Node):
@@ -40,10 +46,21 @@ class FakeRobotStatePublisher(Node):
         )
         
         # State variables
-        self.joint_positions = [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785]  # Home position
-        self.joint_velocities = [0.0] * 7
+        # Determine joint names from URDF (installed share or local src)
+        self.joint_names = self._load_joint_names_from_urdf()
+
+        # State variables (size based on joint count)
+        n = len(self.joint_names)
+        # Default home-like pose for arbitrary joint counts
+        self.joint_positions = [0.0] * n
+        if n >= 2:
+            # set a typical Franka-ish home posture for first few joints
+            defaults = [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785]
+            for i in range(min(n, len(defaults))):
+                self.joint_positions[i] = defaults[i]
+        self.joint_velocities = [0.0] * n
         self.target_positions = self.joint_positions.copy()
-        self.target_velocities = [0.0] * 7
+        self.target_velocities = [0.0] * n
         
         # Motion simulation parameters
         self.motion_speed = 0.1  # rad/s for position interpolation
@@ -77,10 +94,7 @@ class FakeRobotStatePublisher(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'fr3_link0'
         
-        msg.name = [
-            'fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4',
-            'fr3_joint5', 'fr3_joint6', 'fr3_joint7'
-        ]
+        msg.name = self.joint_names
         
         # Add noise if requested
         if self.add_noise:
@@ -93,14 +107,14 @@ class FakeRobotStatePublisher(Node):
         
         msg.position = positions
         msg.velocity = velocities
-        msg.effort = [0.0] * 7  # No effort simulation for now
+        msg.effort = [0.0] * len(msg.name)  # No effort simulation for now
         
         self.joint_state_pub.publish(msg)
     
     def simulate_joint_motion(self):
         """Simulate smooth joint motion towards target positions."""
         # Interpolate positions towards targets
-        for i in range(7):
+        for i in range(len(self.joint_positions)):
             # Position interpolation
             error = self.target_positions[i] - self.joint_positions[i]
             
@@ -122,13 +136,57 @@ class FakeRobotStatePublisher(Node):
     
     def set_target_positions(self, positions):
         """Set target joint positions for simulation."""
-        if len(positions) == 7:
+        if len(positions) == len(self.joint_positions):
             self.target_positions = positions
     
     def set_target_velocities(self, velocities):
         """Set target joint velocities for simulation."""
-        if len(velocities) == 7:
+        if len(velocities) == len(self.joint_positions):
             self.target_velocities = velocities
+
+    def _load_joint_names_from_urdf(self):
+        """Load joint names from package URDF; fallback to local src/urdf file.
+
+        Returns a list of joint names (revolute/continuous/prismatic). If parsing
+        fails, returns a default 7-joint Franka name list.
+        """
+        candidates = []
+        # Try installed package share first
+        if get_package_share_directory:
+            try:
+                share_dir = get_package_share_directory('franka_user_control')
+                candidates.append(os.path.join(share_dir, 'urdf', 'fr3.urdf'))
+                candidates.append(os.path.join(share_dir, 'urdf', 'fr3.urdf.xacro'))
+            except Exception:
+                pass
+
+        # Fallback to source URDF in workspace
+        src_path = os.path.join(os.path.dirname(__file__), '..', 'urdf', 'fr3.urdf')
+        candidates.append(os.path.normpath(src_path))
+
+        for path in candidates:
+            if not path or not os.path.exists(path):
+                continue
+            try:
+                tree = ET.parse(path)
+                root = tree.getroot()
+                joints = []
+                for joint in root.findall('joint'):
+                    jtype = joint.get('type', '')
+                    if jtype in ('revolute', 'continuous', 'prismatic'):
+                        name = joint.get('name')
+                        if name:
+                            joints.append(name)
+                if joints:
+                    return joints
+            except Exception:
+                continue
+
+        # Fallback default
+        return [
+            'fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4',
+            'fr3_joint5', 'fr3_joint6', 'fr3_joint7'
+        ]
 
 
 def main(args=None):

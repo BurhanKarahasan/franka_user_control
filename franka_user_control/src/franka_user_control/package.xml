@@ -24,10 +24,18 @@
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
   <depend>rosidl_default_generators</depend>
-  
+  <!-- Required when this package installs msg/srv/interface files -->
+  <member_of_group>rosidl_interface_packages</member_of_group>
+    
   <!-- Python dependencies -->
   <depend>rclpy</depend>
+  <!-- Runtime tools for simulation/visualization -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
   
   <!-- External libraries -->
   <!-- Note: libfranka must be installed separately on your system -->
@@ -41,7 +49,5 @@
   
   <export>
     <build_type>ament_cmake</build_type>
-    <!-- Required when this package installs msg/srv/interface files -->
-    <member_of_group>rosidl_interface_packages</member_of_group>
   </export>
 </package>
